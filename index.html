@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Customer Orders App</title>
+</head>
+<body>
+
+<h2>Add Customer</h2>
+<input type="text" id="name" placeholder="Name"><br><br>
+<input type="text" id="city" placeholder="City"><br><br>
+<input type="date" id="signup_date"><br><br>
+<button onclick="addCustomer()">Add Customer</button>
+
+<hr>
+
+<h2>Add Order</h2>
+<input type="number" id="customer_id" placeholder="Customer ID"><br><br>
+<input type="number" id="amount" placeholder="Amount"><br><br>
+<input type="date" id="order_date"><br><br>
+<button onclick="addOrder()">Add Order</button>
+
+<hr>
+
+<h2>Customers</h2>
+<div id="customers_list"></div>
+
+<h2>Orders</h2>
+<div id="orders_list"></div>
+
+<h2>Customer + Orders</h2>
+<div id="customer_orders_list"></div>
+
+<script>
+const API = 'http://localhost:5000';
+
+// ----------------- Customers -----------------
+async function loadCustomers() {
+    try {
+        const res = await fetch(`${API}/customers`);
+        const data = await res.json();
+
+        let output = "<ul>";
+        data.forEach(c => {
+            output += `<li>ID: ${c.customer_id}, ${c.name}, ${c.city}, ${c.signup_date.split('T')[0]}</li>`;
+        });
+        output += "</ul>";
+
+        document.getElementById('customers_list').innerHTML = output;
+
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+async function addCustomer() {
+    const name = document.getElementById('name').value;
+    const city = document.getElementById('city').value;
+    const signup_date = document.getElementById('signup_date').value;
+
+    try {
+        const res = await fetch(`${API}/customers`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, city, signup_date })
+        });
+
+        const msg = await res.text();
+        alert(msg);
+        loadCustomers();
+        loadCustomerOrders();
+    } catch (err) {
+        console.error(err);
+        alert('Error adding customer');
+    }
+}
+
+// ----------------- Orders -----------------
+async function loadOrders() {
+    try {
+        const res = await fetch(`${API}/orders`);
+        const data = await res.json();
+
+        let output = "<ul>";
+        data.forEach(o => {
+            output += `<li>Customer ID: ${o.customer_id}, Amount: ${o.amount}, Date: ${o.order_date.split('T')[0]}</li>`;
+        });
+        output += "</ul>";
+
+        document.getElementById('orders_list').innerHTML = output;
+
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+async function addOrder() {
+    const customer_id = document.getElementById('customer_id').value;
+    const amount = document.getElementById('amount').value;
+    const order_date = document.getElementById('order_date').value;
+
+    try {
+        const res = await fetch(`${API}/orders`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ customer_id, amount, order_date })
+        });
+
+        const msg = await res.text();
+        alert(msg);
+        loadOrders();
+        loadCustomerOrders();
+    } catch (err) {
+        console.error(err);
+        alert('Error adding order');
+    }
+}
+
+// ----------------- Customer + Orders -----------------
+async function loadCustomerOrders() {
+    try {
+        const res = await fetch(`${API}/customers-orders`);
+        const data = await res.json();
+
+        let output = "<ul>";
+        data.forEach(row => {
+            output += `<li>${row.customer_id} - ${row.name} - ${row.city} - Amount: ${row.amount} - Date: ${row.order_date.split('T')[0]}</li>`;
+        });
+        output += "</ul>";
+
+        document.getElementById('customer_orders_list').innerHTML = output;
+
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+// ----------------- Init -----------------
+window.onload = () => {
+    loadCustomers();
+    loadOrders();
+    loadCustomerOrders();
+}
+</script>
+
+</body>
+</html>
